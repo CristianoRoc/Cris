@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    input, button {
+      margin-bottom: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      justify-content: space-between;
+      background-color: #f8f8f8;
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Expense Tracker</h1>
+    <form id="expense-form">
+      <input type="text" id="name" placeholder="Expense Name" required />
+      <input type="number" id="amount" placeholder="Amount" required />
+      <input type="text" id="category" placeholder="Category" required />
+      <button type="submit">Add Expense</button>
+    </form>
+
+    <h2>Expense List</h2>
+    <ul id="expense-list"></ul>
+  </div>
+
+  <script>
+    const form = document.getElementById('expense-form');
+    const expenseList = document.getElementById('expense-list');
+
+    // Fetch expenses on load
+    async function loadExpenses() {
+      const response = await fetch('/api/expenses');
+      const expenses = await response.json();
+      expenseList.innerHTML = '';
+      expenses.forEach(exp => {
+        const li = document.createElement('li');
+        li.innerHTML = `${exp.name} - $${exp.amount} (${exp.category}) 
+          <button onclick="deleteExpense(${exp.id})">Delete</button>`;
+        expenseList.appendChild(li);
+      });
+    }
+
+    // Add new expense
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const amount = document.getElementById('amount').value;
+      const category = document.getElementById('category').value;
+
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, amount, category }),
+      });
+
+      const newExpense = await response.json();
+      loadExpenses();  // Reload the list
+      form.reset();    // Reset the form
+    });
+
+    // Delete expense
+    async function deleteExpense(id) {
+      await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
+      loadExpenses();  // Reload the list
+    }
+
+    loadExpenses();  // Load expenses when the page loads
+  </script>
+</body>
+</html>
